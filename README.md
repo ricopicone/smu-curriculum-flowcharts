@@ -7,3 +7,9 @@ The project is written in Python and relies on Graphviz. Required Python package
 ```console
 pip install -r requirements
 ```
+
+Now install Graphviz itself from [here](http://www.graphviz.org/Download.php). With homebrew on macOS, the following command should work.
+
+```console
+brew install graphviz
+```
