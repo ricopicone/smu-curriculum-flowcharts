@@ -71,6 +71,10 @@ class course:
     self.styles.update({style_key: style_value})
     return self
 
+  def set_completed(self, coprereq=True):
+    self.completed = coprereq
+    return self
+
 def new_course(name,credits,term,completed=False):
   global courses
   try: courses
