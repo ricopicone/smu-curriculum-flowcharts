@@ -21,7 +21,7 @@ new_course('MTH 353',3,'2S',False) \
 	.add_prereq('MTH 172')
 
 # GE
-new_course('GE 103/4',3,'1S',False) \
+new_course('GE 103',3,'1S',False) \
 	.add_prereq('MTH 171') \
 	.add_prereq('PHY 171')
 new_course('GE 204',3,'2F',False) \
@@ -63,7 +63,7 @@ new_course('ME 308',3,'3S',False) \
 new_course('ME 309',1,'3S',False) \
 	.add_coreq('ME 308')
 new_course('ME 350',3,'3S',False) \
-	.add_prereq('GE 104')
+	.add_prereq('GE 103')
 new_course('ME 370',3,'3S',False) \
 	.add_prereq('ME 345') \
 	.add_prereq('GE 205') \
