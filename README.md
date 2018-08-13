@@ -17,7 +17,7 @@ brew install graphviz
 ## How to use it
 
 The script `flowchart_generator.py` is the heart of the project. 
-Inside is a bit of a tangle because constructing graphics always is (he said, conveniently absolving himself of messy code). 
+Inside is a bit of a tangle because constructing graphics always is (he said, conveniently absolving himself for messy code). 
 This script uses the Ruby graphviz API `graphviz` to construct a flowchart.
 Users can edit the `courses_2017.py` (or create a similar) file, for instance, which defines a number of `course` class instances. One such definition is
 
