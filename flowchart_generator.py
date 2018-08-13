@@ -114,7 +114,7 @@ kelly_colors_hex = [
 graph = functools.partial(gv.Graph, format='svg')
 digraph = functools.partial(gv.Digraph, format='svg')
 
-execfile(sys.argv[1])
+exec(open(sys.argv[1]).read())
 
 nodes_by_term = [[],[],[],[],[],[],[],[]] # initialize
 terms_by_name = ['1F','1S','2F','2S','3F','3S','4F','4S']
