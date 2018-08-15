@@ -403,7 +403,7 @@
 <!-- MTH 353&#45;&gt;ME 370 -->
 <g id="edge45" class="edge">
 <title>MTH 353&#45;&gt;ME 370</title>
-<path fill="none" stroke="#93aa00" stroke-width="3" stroke-dasharray="5,2" d="M534.0348,-557.3909C577.4544,-558.0805 641.9854,-559.1054 687.0262,-559.8207"/>
+<path fill="none" stroke="#93aa00" stroke-width="3" d="M534.0348,-557.3909C577.4544,-558.0805 641.9854,-559.1054 687.0262,-559.8207"/>
 <polygon fill="#93aa00" stroke="#93aa00" stroke-width="3" points="687.1233,-563.3226 697.1776,-559.982 687.2345,-556.3235 687.1233,-563.3226"/>
 </g>
 <!-- MTH 353&#45;&gt;ME 410 -->

@@ -145,7 +145,7 @@ digraph {
 	"GE 104" -> "ME 350" [color="#7f180d" style=solid]
 	"ME 345" -> "ME 370" [color="#ff7a5c" style=solid]
 	"GE 205" -> "ME 370" [color="#b32851" style=solid]
-	"MTH 353" -> "ME 370" [color="#93aa00" style=dashed]
+	"MTH 353" -> "ME 370" [color="#93aa00" style=solid]
 	"GE 205" -> "ME 410" [color="#b32851" style=solid]
 	"MTH 322" -> "ME 410" [color="#53377a" style=solid]
 	"MTH 353" -> "ME 410" [color="#93aa00" style=dashed]

@@ -69,7 +69,7 @@ new_course('ME 350',3,'3S',False) \
 new_course('ME 370',3,'3S',False) \
 	.add_prereq('ME 345') \
 	.add_prereq('GE 205') \
-	.add_coprereq('MTH 353')
+	.add_prereq('MTH 353')
 new_course('ME 410',3,'4F',False) \
 	.add_prereq('GE 205') \
 	.add_prereq('MTH 322') \
