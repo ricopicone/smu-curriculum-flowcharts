@@ -34,7 +34,7 @@ The three (continuation) lines afterward say `ME 498` has prerequisites `ME 302`
 Once you have a file with such statements, let's just say it's `courses_2017.py`, you can run it through `flowchart_generator.py` with the following statement.
 
 ```console
-python flowchart_generator.py courses_2017.py
+python flowchart_generator.py courses_2024.py
 ```
 
 If a student (or her advisor) wanted to keep track of their own progress, she could mark a course as "completed" by changing the `completed` boolean of a course instance to `True`. There are (at least) two ways to do this. Within the `courses_2017.py` script, for instance, where the course, let's call it `MTH 171`, is defined using the `new_course` function, we could make the following simple statement.
