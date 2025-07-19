@@ -10,7 +10,8 @@ new_course('PHY 171L',1,'1F',False) \
 new_course('MTH 172',4,'1S',False) \
 	.add_prereq('MTH 171')
 new_course('PHY 172',4,'1S',False) \
-	.add_coprereq('MTH 172')
+	.add_coprereq('MTH 172') \
+	.add_prereq('PHY 171')
 new_course('PHY 172L',1,'1S',False) \
 	.add_coreq('PHY 172')
 new_course('CHM 145',3,'2F',False)
