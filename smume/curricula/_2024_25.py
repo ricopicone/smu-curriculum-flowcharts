@@ -29,7 +29,7 @@ curriculum.course('ME 201', 2, category="ME", full_name="Technical Communication
 curriculum.course('ME 300', 3, category="ME", full_name="Manufacturing").add_prereq('GE 206')
 curriculum.course('ME 300L', 1, category="ME", full_name="Manufacturing Laboratory").add_coprereq('ME 300')
 curriculum.course('ME 303', 3, category="ME", full_name="Materials Science").add_prereq('GE 206').add_prereq('CHM 145')
-curriculum.course('ME 316', 2, category="ME", full_name="Numerical Methods").add_coprereq('ME 345')
+curriculum.course('ME 316', 2, category="ME", full_name="Mechatronics and Instrumentation Laboratory").add_coprereq('ME 345')
 curriculum.course('ME 340', 3, category="ME", full_name="Thermodynamics I").add_prereq('CHM 145').add_prereq('PHY 172').add_coprereq('MTH 172')
 curriculum.course('ME 345', 3, category="ME", full_name="Mechatronics").add_prereq('MTH 172').add_prereq('PHY 172')
 curriculum.course('ME 302', 3, category="ME", full_name="Machine Design").add_prereq('GE 206')
