@@ -29,7 +29,16 @@ def build_graph(plan, output_path=None, format="png"):
         "#5254a3", "#6b6ecf", "#9c9ede", "#3182bd", "#31a354"
     ]
 
-    sorted_terms = sorted(courses_by_term.keys())
+    def term_sort_key(term):
+        import re
+        match = re.match(r"(\d+)-([A-Za-z]+)", term)
+        if not match:
+            return (term,)
+        year, season = match.groups()
+        season_order = {'S': 0, 'Su': 1, 'Su1': 2, 'Su2': 3, 'F': 4}
+        return (int(year), season_order.get(season, 99))
+
+    sorted_terms = sorted(courses_by_term.keys(), key=term_sort_key)
     term_cluster_ids = []
 
     # Create a subgraph for each term
@@ -47,7 +56,8 @@ def build_graph(plan, output_path=None, format="png"):
             if course.completed:
                 fill_color = '#cecdc9'
             else:
-                fill_color = category_colors.get(course.category, '#ffffff')
+                category_for_color = next((c for c in course.categories if c in category_colors), None)
+                fill_color = category_colors.get(category_for_color, '#ffffff')
             label_text = f"{course.name}<font color=\"#6e6d6a\"><sub>  {course.credits} cr</sub></font>"
             if course.completed:
                 label_text = f"✓ {label_text}"

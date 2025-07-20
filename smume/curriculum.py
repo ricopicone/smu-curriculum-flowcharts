@@ -8,6 +8,7 @@ class Curriculum:
     def __init__(self, name: str):
         self.name = name
         self.courses = {}
+        self.category_requirements = {}
 
     def course(self, name, credits, **kwargs):
         """
@@ -17,3 +18,16 @@ class Curriculum:
         course = Course(name, credits, **kwargs)
         self.courses[name] = course
         return course
+
+    def category_requirement(self, category: str, kind: str, number: int = None, note: str = None):
+        """
+        Defines a category requirement for the curriculum.
+        """
+        if category not in self.category_requirements:
+            self.category_requirements[category] = []
+        self.category_requirements[category].append({
+            "kind": kind,
+            "number": number,
+            "note": note
+        })
+        return self

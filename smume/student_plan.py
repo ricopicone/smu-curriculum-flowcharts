@@ -67,7 +67,7 @@ class StudentPlan(GenericPlan):
         """
         term_order = ["S", "F"]
         start_index = term_order.index(self._normalize_term_label(self.start_year, self.start_term).split("-")[1])
-        generic_terms = sorted(self.courses_by_term().keys())
+        generic_terms = sorted(t for t in self.courses_by_term().keys() if t is not None)
 
         year = self.start_year
         season_index = start_index

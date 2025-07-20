@@ -8,19 +8,23 @@ class Course:
         "MS": "MS", "Math and Science": "MS",
         "GE": "GE", "General Engineering": "GE",
         "ME": "ME", "Mechanical Engineering": "ME",
-        "O": "O", "Other": "O"
+        "O": "O", "Other": "O",
+        "F": "F", "Foundation": "F",
+        "Con": "Con", "Conversatio": "Con",
+        "Ora": "Ora",
     }
 
-    def __init__(self, name, credits, term=None, completed=False, category=None, full_name=None, note=None):
+    def __init__(self, name, credits, term=None, completed=False, critical_path=True, categories=None, full_name=None, note=None, ms_credits=None, writing_intensive=False):
         self.name = name
         self.credits = credits
         self.term = term
         self.completed = completed
+        self.critical_path = critical_path
         self.prereqs = []
         self.coreqs = []
         self.coprereqs = []
         self.styles = {}
-        self.category = self._normalize_category(category)
+        self.categories = self._normalize_categories(categories)
         self.full_name = full_name or name
         self.note = note
         if self.note is None:
@@ -28,14 +32,21 @@ class Course:
                 self.note = f"{self.full_name}"
             else:
                 self.note = f"{self.name} ({self.credits} cr)"
+        if "MS" in self.categories:
+            self.ms_credits = ms_credits if ms_credits is not None else credits
+        else:
+            self.ms_credits = 0
+        self.writing_intensive = writing_intensive
 
-    def _normalize_category(self, category):
-        if category is None:
-            return None
-        normalized = self.VALID_CATEGORIES.get(category)
-        if not normalized:
-            raise ValueError(f"Invalid course category: {category}. Must be one of: {', '.join(self.VALID_CATEGORIES.keys())}")
-        return normalized
+    def _normalize_categories(self, categories):
+        for cat in categories:
+            if isinstance(cat, str):
+                cat = [cat]
+            if isinstance(cat, list):
+                for c in cat:
+                    if c not in self.VALID_CATEGORIES:
+                        raise ValueError(f"Invalid course category: {c}. Must be one of: {', '.join(self.VALID_CATEGORIES.keys())}")
+                return [self.VALID_CATEGORIES[c] for c in cat if c in self.VALID_CATEGORIES]
 
     def add_prereq(self, prereq_name):
         self.prereqs.append(prereq_name)
@@ -57,7 +68,7 @@ class Course:
         self.completed = completed
         return self
 
-def new_course(name, credits, term=None, completed=False, category=None):
+def new_course(name, credits, term=None, completed=False, categories=None):
     """Creates and registers a new course."""
-    course = Course(name, credits, term, completed, category)
+    course = Course(name, credits, term, completed, categories)
     return course
