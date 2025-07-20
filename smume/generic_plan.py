@@ -1,5 +1,5 @@
 import re
-from smume.utils import term_sort_key
+from smume.utils import term_sort_key, normalize_categories
 
 def catalog_to_module_name(catalog):
     """
@@ -26,8 +26,6 @@ class GenericPlan:
     """
 
     def __init__(self, catalog):
-        self.course_terms = {}
-
         if isinstance(catalog, str):
             module_name = catalog_to_module_name(catalog)
             mod = importlib.import_module(f"smume.curricula.{module_name}")
@@ -37,13 +35,29 @@ class GenericPlan:
             self.curriculum = catalog
             self.catalog = str(catalog)
 
-        self.course_terms = {
-            name: course.term for name, course in self.curriculum.courses.items()
-        }
-
     @property
     def courses(self):
+        """
+        Returns all courses with a term assigned.
+        This includes courses that are not yet completed.
+        """
+        return [course for course in self.courses_all if course.term]
+
+    @property
+    def courses_all(self):
+        """
+        Returns all courses in the curriculum.
+        """
         return self.curriculum.courses.values()
+
+    @property
+    def course_terms(self):
+        """
+        Returns a mapping of course names to their assigned terms.
+        """
+        return {
+            name: course.term for name, course in self.curriculum.courses.items()
+        }
 
     def get_term(self, course_name):
         return self.course_terms.get(course_name)
@@ -53,6 +67,75 @@ class GenericPlan:
             self.course_terms[course_name] = term
             if course_name in self.curriculum.courses:
                 self.curriculum.courses[course_name].term = term
+    
+    def add_course(self, course_name, term):
+        """
+        Adds a course to the plan with a specific term.
+        """
+        if course_name not in self.curriculum.courses:
+            raise ValueError(f"Course '{course_name}' not found in curriculum.")
+        
+        self.set_term(course_name, term)
+    
+    def remove_course(self, course_name):
+        """
+        Removes a course from the plan.
+        """
+        if course_name not in self.curriculum.courses:
+            raise ValueError(f"Course '{course_name}' not found in curriculum.")
+        
+        self.set_term(course_name, None)
+    
+    def substitute_course(self, old_name, new_name):
+        """
+        Substitutes an old course with a new one.
+        """
+        if old_name not in self.curriculum.courses:
+            raise ValueError(f"Course '{old_name}' not found in curriculum.")
+        if new_name not in self.curriculum.courses:
+            raise ValueError(f"Course '{new_name}' not found in curriculum.")
+
+        old_course = self.curriculum.courses[old_name]
+        new_course = self.curriculum.courses[new_name]
+
+        # Copy term and other attributes from the old course
+        new_course.term = old_course.term
+        new_course.completed = old_course.completed
+        new_course.critical_path = old_course.critical_path
+
+        # Remove the old course from the plan
+        old_course.term = None
+
+    def switch_writing_intensive(self, old_name, new_name):
+        """
+        Substitutes one writing intensive course for another and adds the non-writing intensive version of the old course.
+        """
+        if old_name not in self.curriculum.courses:
+            raise ValueError(f"Course '{old_name}' not found in curriculum.")
+        if new_name not in self.curriculum.courses:
+            raise ValueError(f"Course '{new_name}' not found in curriculum.")
+
+        old_course = self.curriculum.courses[old_name]
+        new_course = self.curriculum.courses[new_name]
+
+        # Ensure both courses are writing intensive
+        if not old_course.writing_intensive or not new_course.writing_intensive:
+            raise ValueError("Both courses must be writing intensive.")
+
+        # Find the non-writing intensive version of the old course
+        non_writing_course_name = old_name.replace("W", "")
+        if non_writing_course_name not in self.curriculum.courses:
+            raise ValueError(f"Non-writing intensive version '{non_writing_course_name}' not found in curriculum.")
+        non_writing_course = self.curriculum.courses[non_writing_course_name]
+
+        # Add the non-writing intensive course to the plan by setting its term
+        if old_course.term:
+            self.set_term(non_writing_course_name, old_course.term)
+        else:
+            raise ValueError(f"Old course '{old_name}' does not have a term assigned. Cannot set term for non-writing intensive course.")
+
+        # Substitute the old course with the new one
+        self.substitute_course(old_name, new_name)
 
     def apply_term_mapping(self, term_map: dict, check: bool = False):
         """
@@ -129,8 +212,70 @@ class GenericPlan:
         for course_name, unmet in issues.items():
             print(f"Course: {course_name}")
             if unmet["prereq"]:
-                print(f"  Unmet Prerequisites: {', '.join(unmet['prereq'])}")
+                print(f"  - Unmet Prerequisites: {', '.join(unmet['prereq'])}")
             if unmet["coreq"]:
-                print(f"  Unmet Corequisites: {', '.join(unmet['coreq'])}")
+                print(f"  - Unmet Corequisites: {', '.join(unmet['coreq'])}")
             if unmet["coprereq"]:
-                print(f"  Unmet Coprerequisites: {', '.join(unmet['coprereq'])}")
+                print(f"  - Unmet Coprerequisites: {', '.join(unmet['coprereq'])}")
+
+    def check_category_requirements(self):
+        """
+        Check if the courses in the plan meet the category requirements defined in the curriculum.
+        Returns a dictionary of unmet category requirements.
+        """
+        unmet_requirements = {}
+        checking_methods = {
+            "Writing Intensive": self.check_writing_intensive,
+            "Number of Courses": self.check_number_of_courses,
+        }
+        for category, requirements in self.curriculum.category_requirements.items():
+            for requirement in requirements:
+                # Call the appropriate checking method
+                if "kind" not in requirement:
+                    unmet_requirements[category] = "Missing 'kind' in requirement"
+                    continue
+                if requirement["kind"] not in checking_methods:
+                    unmet_requirements[category] = f"Unknown requirement kind: {requirement['kind']}"
+                    continue
+                # Call the checking method for this requirement kind
+                check_method = checking_methods[requirement["kind"]]
+                result = check_method(requirement, category)
+                if result:
+                    if category not in unmet_requirements:
+                        unmet_requirements[category] = {}
+                    unmet_requirements[category][requirement.get("note", "No note")] = result
+        return unmet_requirements
+    
+    def check_writing_intensive(self, requirement: dict, category: str):
+        """
+        Check if the plan meets the writing intensive requirements for a given category.
+        """
+        writing_courses = [c for c in self.courses if c.writing_intensive and category in normalize_categories(c.categories)]
+        if len(writing_courses) < requirement.get("number", 1):
+            return f"At least {requirement['number']} writing intensive course(s) required in {category}."
+        return None
+    
+    def check_number_of_courses(self, requirement: dict, category: str):
+        """
+        Check if the plan meets the number of courses required for a given category.
+        """
+        courses_in_category = [c for c in self.courses if category in c.categories]
+        if len(courses_in_category) < requirement.get("number", 1):
+            return f"At least {requirement['number']} course(s) required in {category}."
+        return None
+    
+    def print_category_requirement_issues(self):
+        """
+        Print any unmet category requirements.
+        """
+        issues = self.check_category_requirements()
+        if not issues:
+            print("All category requirements met.")
+            return
+
+        for category, issue in issues.items():
+            print(f"Category: {category}")
+            for note, message in issue.items():
+                print(f"  - Issue: {note}. {message}")
+        print("Please review the curriculum for unmet category requirements.")
+        return issues
