@@ -74,12 +74,13 @@ curriculum.category_requirement("Ora", kind="Number of Courses", number=2, note=
 # Assign Terms
 generic_plan = GenericPlan(curriculum)
 generic_plan.apply_term_mapping({
-    "1F": ["MTH 171", "PHY 171", "PHY 171L", "ME 100", "COR 100"],
+    "1F": ["PHY 171", "PHY 171L", "ME 100", "COR 100"],
     "1S": ["MTH 172", "PHY 172", "PHY 172L", "GE 104", "COR 120"],
-    "2F": ["GE 204", "CHM 145", "MTH 353", "ME 201", "COR 110"],
+    "2F": ["MTH 171", "GE 204", "CHM 145", "MTH 353", "ME 201", "COR 110"],
     "2S": ["GE 205", "GE 206", "GE 207", "ME 350", "COR 210"],
     "3F": ["ME 300", "ME 300L", "ME 303", "ME 316", "ME 345", "ME 340"],
     "3S": ["ME 302", "ME 308", "ME 309", "ME 370", "COR 220", "COR 240"],
     "4F": ["ME 430", "ME 430L", "ME 498", "ME El. 1", "COR 250"],
     "4S": ["ME 499", "ME El. 2", "ME El. 3", "COR 310", "COR 340W"],
 })
+generic_plan.print_dependency_issues()

@@ -1,4 +1,5 @@
 import re
+from smume.utils import term_sort_key
 
 def catalog_to_module_name(catalog):
     """
@@ -53,7 +54,7 @@ class GenericPlan:
             if course_name in self.curriculum.courses:
                 self.curriculum.courses[course_name].term = term
 
-    def apply_term_mapping(self, term_map: dict):
+    def apply_term_mapping(self, term_map: dict, check: bool = False):
         """
         Updates course terms based on a dictionary like:
         {
@@ -61,13 +62,75 @@ class GenericPlan:
             "1S": ["ME 392"]
         }
         Only updates terms for the listed courses. Other courses remain unchanged.
+        If check=True, returns a dictionary of dependency issues.
         """
         for term, course_list in term_map.items():
             for course_name in course_list:
                 self.set_term(course_name, term)
+
+        if check:
+            return self.check_dependencies()
     
     def courses_by_term(self):
         grouped = {}
         for course in self.courses:
             grouped.setdefault(course.term, []).append(course)
         return grouped
+
+    def check_dependencies(self):
+        """
+        Check for unmet prerequisites, corequisites, and coprerequisites
+        in the course plan. Returns a dictionary of problems keyed by course name.
+        """
+        problems = {}
+
+        term_order = sorted(
+            {t for t in self.course_terms.values() if t is not None},
+            key=term_sort_key
+        )
+    
+        term_index = {term: i for i, term in enumerate(term_order)}
+
+        for course in self.courses:
+            course_term = self.course_terms.get(course.name)
+            course_index = term_index.get(course_term, -1)
+
+            unmet = {"prereq": [], "coreq": [], "coprereq": []}
+
+            for pre in getattr(course, "prereqs", []):
+                pre_term = self.course_terms.get(pre)
+                if pre_term is None or term_index.get(pre_term, -1) >= course_index:
+                    unmet["prereq"].append(pre)
+
+            for co in getattr(course, "coreqs", []):
+                co_term = self.course_terms.get(co)
+                if co_term is None or term_index.get(co_term, -1) != course_index:
+                    unmet["coreq"].append(co)
+
+            for copre in getattr(course, "coprereqs", []):
+                copre_term = self.course_terms.get(copre)
+                if copre_term is None or term_index.get(copre_term, -1) > course_index:
+                    unmet["coprereq"].append(copre)
+
+            if any(unmet.values()):
+                problems[course.name] = unmet
+
+        return problems
+    
+    def print_dependency_issues(self):
+        """
+        Print any unmet prerequisites, corequisites, or coprerequisites.
+        """
+        issues = self.check_dependencies()
+        if not issues:
+            print("No dependency issues found.")
+            return
+
+        for course_name, unmet in issues.items():
+            print(f"Course: {course_name}")
+            if unmet["prereq"]:
+                print(f"  Unmet Prerequisites: {', '.join(unmet['prereq'])}")
+            if unmet["coreq"]:
+                print(f"  Unmet Corequisites: {', '.join(unmet['coreq'])}")
+            if unmet["coprereq"]:
+                print(f"  Unmet Coprerequisites: {', '.join(unmet['coprereq'])}")

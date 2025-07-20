@@ -1,6 +1,7 @@
 # graph_builder.py
 
 from graphviz import Digraph
+from smume.utils import term_sort_key
 
 def build_graph(plan, output_path=None, format="png"):
     graph = Digraph(format=format, engine='dot')
@@ -29,17 +30,11 @@ def build_graph(plan, output_path=None, format="png"):
         "#5254a3", "#6b6ecf", "#9c9ede", "#3182bd", "#31a354"
     ]
 
-    def term_sort_key(term):
-        import re
-        match = re.match(r"(\d+)-([A-Za-z]+)", term)
-        if not match:
-            return (term,)
-        year, season = match.groups()
-        season_order = {'S': 0, 'Su': 1, 'Su1': 2, 'Su2': 3, 'F': 4}
-        return (int(year), season_order.get(season, 99))
-
     sorted_terms = sorted(courses_by_term.keys(), key=term_sort_key)
     term_cluster_ids = []
+
+    # Check for dependency violations if method exists
+    violations = plan.check_dependencies() if hasattr(plan, 'check_dependencies') else {}
 
     # Create a subgraph for each term
     for idx, term in enumerate(sorted_terms):
@@ -69,6 +64,14 @@ def build_graph(plan, output_path=None, format="png"):
                 'fontsize': '10',
                 'tooltip': getattr(course, 'note', ''),
             }
+            is_violation_node = course.name in violations or any(
+                course.name in deps
+                for v in violations.values()
+                for deps in [v.get('prereq', []) + v.get('coreq', []) + v.get('coprereq', [])]
+            )
+            if is_violation_node:
+                style_attrs['color'] = 'red'
+                style_attrs['penwidth'] = '3'
             style_attrs.update(course.styles)
             sub.node(course.name, **style_attrs)
 
@@ -92,9 +95,16 @@ def build_graph(plan, output_path=None, format="png"):
             edge_color = edge_colors[color_index % len(edge_colors)]
             color_index += 1
             completed = next((c for c in plan.courses if c.name == prereq and c.completed), None)
+            is_violation = (
+                course.name in violations
+                and prereq in violations[course.name].get('prereq', [])
+            )
+            if is_violation:
+                for node_name in [course.name, prereq]:
+                    graph.node(node_name, color='red', penwidth='3')
             graph.edge(
                 prereq, course.name,
-                color='#aaaaaa' if completed else edge_color,
+                color='red' if is_violation else ('#aaaaaa' if completed else edge_color),
                 style='solid',
                 minlen='2',
                 labelfloat='true'
@@ -103,9 +113,16 @@ def build_graph(plan, output_path=None, format="png"):
             edge_color = edge_colors[color_index % len(edge_colors)]
             color_index += 1
             completed = next((c for c in plan.courses if c.name == coreq and c.completed), None)
+            is_violation = (
+                course.name in violations
+                and coreq in violations[course.name].get('coreq', [])
+            )
+            if is_violation:
+                for node_name in [course.name, coreq]:
+                    graph.node(node_name, color='red', penwidth='3')
             graph.edge(
                 coreq, course.name,
-                color='#aaaaaa' if completed else edge_color,
+                color='red' if is_violation else ('#aaaaaa' if completed else edge_color),
                 style='bold',
                 dir='both',
                 minlen='2',
@@ -115,9 +132,16 @@ def build_graph(plan, output_path=None, format="png"):
             edge_color = edge_colors[color_index % len(edge_colors)]
             color_index += 1
             completed = next((c for c in plan.courses if c.name == coprereq and c.completed), None)
+            is_violation = (
+                course.name in violations
+                and coprereq in violations[course.name].get('coprereq', [])
+            )
+            if is_violation:
+                for node_name in [course.name, coprereq]:
+                    graph.node(node_name, color='red', penwidth='3')
             graph.edge(
                 coprereq, course.name,
-                color='#aaaaaa' if completed else edge_color,
+                color='red' if is_violation else ('#aaaaaa' if completed else edge_color),
                 style='dashed',
                 minlen='2',
                 labelfloat='true'
