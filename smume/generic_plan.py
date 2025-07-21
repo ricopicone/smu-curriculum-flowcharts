@@ -59,6 +59,19 @@ class GenericPlan:
             name: course.term for name, course in self.curriculum.courses.items()
         }
 
+    @property
+    def course_categories(self):
+        """
+        Returns a dictionary mapping category names to lists of courses.
+        A course may appear in multiple categories.
+        """
+        from collections import defaultdict
+        category_map = defaultdict(list)
+        for course in self.courses:
+            for category in course.categories:
+                category_map[category].append(course)
+        return dict(category_map)
+
     def get_term(self, course_name):
         return self.course_terms.get(course_name)
 
@@ -133,6 +146,11 @@ class GenericPlan:
             self.set_term(non_writing_course_name, old_course.term)
         else:
             raise ValueError(f"Old course '{old_name}' does not have a term assigned. Cannot set term for non-writing intensive course.")
+        
+        # Remove the non-writing intensive version of the new course
+        non_writing_course_name = new_name.replace("W", "")
+        if non_writing_course_name in self.curriculum.courses:
+            self.remove_course(non_writing_course_name)
 
         # Substitute the old course with the new one
         self.substitute_course(old_name, new_name)
@@ -227,6 +245,7 @@ class GenericPlan:
         checking_methods = {
             "Writing Intensive": self.check_writing_intensive,
             "Number of Courses": self.check_number_of_courses,
+            "Number of Credits": self.check_number_of_credits,
         }
         for category, requirements in self.curriculum.category_requirements.items():
             for requirement in requirements:
@@ -246,22 +265,40 @@ class GenericPlan:
                     unmet_requirements[category][requirement.get("note", "No note")] = result
         return unmet_requirements
     
-    def check_writing_intensive(self, requirement: dict, category: str):
+    def check_writing_intensive(self, requirement: dict, category: str, completed_only: bool = False):
         """
         Check if the plan meets the writing intensive requirements for a given category.
         """
-        writing_courses = [c for c in self.courses if c.writing_intensive and category in normalize_categories(c.categories)]
+        if completed_only:
+            writing_courses = [c for c in self.courses if c.writing_intensive and c.completed and category in normalize_categories(c.categories, self.curriculum.valid_categories)]
+        else:
+            writing_courses = [c for c in self.courses if c.writing_intensive and category in normalize_categories(c.categories, self.curriculum.valid_categories)]
         if len(writing_courses) < requirement.get("number", 1):
             return f"At least {requirement['number']} writing intensive course(s) required in {category}."
         return None
-    
-    def check_number_of_courses(self, requirement: dict, category: str):
+
+    def check_number_of_courses(self, requirement: dict, category: str, completed_only: bool = False):
         """
         Check if the plan meets the number of courses required for a given category.
         """
-        courses_in_category = [c for c in self.courses if category in c.categories]
+        if completed_only:
+            courses_in_category = [c for c in self.courses if c.completed and category in c.categories]
+        else:
+            courses_in_category = [c for c in self.courses if category in c.categories]
         if len(courses_in_category) < requirement.get("number", 1):
             return f"At least {requirement['number']} course(s) required in {category}."
+        return None
+
+    def check_number_of_credits(self, requirement: dict, category: str, completed_only: bool = False):
+        """
+        Check if the plan meets the number of credits required for a given category.
+        """
+        if completed_only:
+            credits_in_category = sum(c.credits for c in self.courses if c.completed and category in c.categories)
+        else:
+            credits_in_category = sum(c.credits for c in self.courses if category in c.categories)
+        if credits_in_category < requirement.get("number", 3):
+            return f"At least {requirement['number']} credits required in {category}."
         return None
     
     def print_category_requirement_issues(self):
@@ -279,3 +316,67 @@ class GenericPlan:
                 print(f"  - Issue: {note}. {message}")
         print("Please review the curriculum for unmet category requirements.")
         return issues
+    
+    def category_requirement_status(self, category, completed_only=False):
+        """
+        Checks if the plan meets the category requirement for a given category.
+        Returns True if the requirement is satisfied, a message if not.
+        If completed_only is True, only considers completed courses.
+        """
+        if category not in self.curriculum.category_requirements:
+            return None
+        
+        requirements = self.curriculum.category_requirements[category]
+
+        for requirement in requirements:
+            if "kind" not in requirement:
+                return f"Missing requirement 'kind' for category '{category}'."
+            if requirement["kind"] == "Writing Intensive":
+                result = self.check_writing_intensive(requirement, category)
+            elif requirement["kind"] == "Number of Courses":
+                result = self.check_number_of_courses(requirement, category)
+            elif requirement["kind"] == "Number of Credits":
+                result = self.check_number_of_credits(requirement, category)
+            else:
+                return False
+            
+            if result:
+                return result
+        
+        return True
+    
+    def fraction_of_category_satisfied(self, category, requirement_kind="Number of Credits", completed_only=False):
+        """
+        Returns the fraction of the category requirement that has been satisfied.
+        For "Number of Courses", returns the fraction of courses completed.
+        For "Number of Credits", returns the fraction of credits completed.
+        For completed_only=True, only considers completed courses (fraction completed).
+        For completed_only=False, considers all courses in the category (fraction planned).
+        """
+        if category not in self.curriculum.category_requirements:
+            print(f"Category '{category}' not found in curriculum.")
+            return None
+        
+        requirements = self.curriculum.category_requirements[category]
+        total_required = 0
+        total_completed = 0
+        total_planned = 0
+
+        for requirement in requirements:
+            if requirement["kind"] == requirement_kind:
+                if requirement_kind == "Number of Courses":
+                    total_required += requirement.get("number", 1)
+                    total_completed += len([c for c in self.courses if category in c.categories and c.completed])
+                    total_planned += len([c for c in self.courses if category in c.categories])
+                elif requirement_kind == "Number of Credits":
+                    total_required += requirement.get("number")
+                    total_planned += sum(c.credits for c in self.courses if category in c.categories)
+                    total_completed += sum(c.credits for c in self.courses if category in c.categories and c.completed)
+
+        if total_required == 0:
+            return None
+        
+        if completed_only:
+            return total_completed / total_required
+        else:
+            return total_planned / total_required

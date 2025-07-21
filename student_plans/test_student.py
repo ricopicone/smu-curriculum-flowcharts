@@ -1,4 +1,5 @@
 from smume.student_plan import StudentPlan
+import smume.report
 
 # Create a student plan for the 2024–25 catalog, starting in Fall 2024
 plan = StudentPlan("2024-25", start_year=2024, start_term="Fall")
@@ -11,6 +12,9 @@ plan.mark_completed("MTH 172")
 plan.mark_completed("PHY 171")
 plan.mark_completed("PHY 171L")
 plan.mark_completed("PHY 172")
+plan.mark_completed("COR 100")
+plan.mark_completed("COR 110")
+plan.mark_completed("COR 120")
 
 # Move a course to a specific term
 plan.set_course_term("GE 204", 2026, "Spring") # This violates a prerequisite as we'll see
@@ -30,3 +34,13 @@ plan.print_category_requirement_issues()
 # Generate a visual representation of the plan
 from smume.graph_builder import build_graph
 build_graph(plan, output_path="test_student", format="svg")
+
+# Generate a text-based report of the plan
+report = smume.report.Report(plan)
+print(report.generate_text())
+
+# Generate an HTML report
+print(report.generate_html())
+
+# Save the report to a file
+report.save("student_plan_report.html")

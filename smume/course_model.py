@@ -1,7 +1,5 @@
 # course_model.py
 
-from smume.utils import normalize_categories
-
 class Course:
     """Defines a course with relationships and metadata."""
 
@@ -15,7 +13,7 @@ class Course:
         self.coreqs = []
         self.coprereqs = []
         self.styles = {}
-        self.categories = normalize_categories(categories)
+        self.categories = categories
         self.full_name = full_name or name
         self.note = note
         if self.note is None:

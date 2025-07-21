@@ -1,52 +1,91 @@
-# smu-curriculum-flowcharts
+# SMUME: Saint Martin's University Mechanical Engineering Curriculum Planner
 
-This repository contains the source code for generating curriculum flowcharts for the Saint Martin's University (SMU) Department of Mechanical Engineering. It could rather easily be adopted to other programs and universities.
+SMUME is a Python-based tool for visualizing and managing Mechanical Engineering degree plans at Saint Martin’s University. It supports students, advisors, and faculty by offering a flexible and programmable way to define curricula, create student-specific academic plans, and generate dependency-aware flowcharts.
 
-The project is written in Python and relies on Graphviz. Required Python packages can be installed using the following command.
+---
 
-```console
-pip install -r requirements
+## 🔧 Features
+
+### For Students & Advisors
+- **Student Plans**: Generate a personalized academic plan from a catalog year and start term (e.g., Fall 2024).
+- **Prerequisite Checking**: Automatically detect and highlight missing or improperly sequenced prerequisites, corequisites, and concurrent prerequisites.
+- **Flowchart Generation**: Render academic plans as dependency graphs with color-coded course categories, term clustering, and visual indicators for completion and violations.
+
+### For Faculty
+- **Curriculum Definition**: Easily define new curriculum structures using Python—no GUI builder required.
+- **Generic Plans**: Assign default term-by-term layouts for catalog years.
+- **Extensibility**: Add metadata like full course names, notes, and categories (Core, Math/Science, GE, ME, Other).
+
+---
+
+## 📁 Project Structure
+
+- `smume/curricula/` – Defines catalog year curricula (e.g. `_2024_25.py`)
+- `smume/generic_plans/` – Maps courses to default terms
+- `smume/student_plan.py` – Logic for student-specific academic planning
+- `smume/graph_builder.py` – Graphviz-based flowchart generation
+
+---
+
+## 📌 Notes
+
+- Term formats are flexible: both `Fall` and `F`, and `2025` or `25` are valid.
+- Curriculum and plan objects are fully programmable—ideal for integration into other workflows or GUIs.
+- Graphs highlight completed courses (gray, checkmarks), unmet dependencies (red), and visually group courses by academic term.
+
+---
+
+## 📚 Example
+
+<img src="img/2024-25.svg" width="100%" />
+
+---
+
+## 👥 Who It's For
+
+- **Students**: Visualize and adjust your academic plan semester by semester.
+- **Advisors**: Confirm course sequencing and verify prerequisite compliance.
+- **Faculty**: Define and revise curriculum plans in code with minimal friction.
+
+---
+
+## 🛠️ Future Work
+
+- Web frontend
+- Support for electives and transfer credit
+- Improved drag-and-drop UI for plan adjustment
+
+---
+
+## 🚀 Quick Start
+
+Install the package with pip:
+
+```bash
+pip install smume
 ```
 
-Now install Graphviz itself from [here](http://www.graphviz.org/Download.php). With homebrew on macOS, the following command should work.
+For development:
 
-```console
-brew install graphviz
+```bash
+git clone https://github.com/YOUR_USERNAME/smu-curriculum-flowcharts.git
+cd smu-curriculum-flowcharts
+poetry install
 ```
 
-## How to use it
+Usage examples:
 
-The script `flowchart_generator.py` is the heart of the project. 
-Inside is a bit of a tangle because constructing graphics always is (he said, conveniently absolving himself for messy code). 
-This script uses the Ruby graphviz API `graphviz` to construct a flowchart.
-Users can edit the `courses_2017.py` (or create a similar) file, for instance, which defines a number of `course` class instances. One such definition is
+```bash
+# Clone and install
+poetry install
 
-```python
-new_course('ME 498',3,'4F',False) \
-	.add_prereq('ME 302') \
-	.add_prereq('ME 370') \
-	.add_coprereq('ME 430')
+# Example: generate a graph for the 2024–25 curriculum
+poetry run python scripts/generate_generic_graph.py 2024-25
+
+# Example: create and render a student plan
+poetry run python scripts/generate_student_graph.py 2024-25 --start-year 2024 --start-term Fall
 ```
 
-The first line means "define a new instance of the `course` class with name `ME 498`, which is `3` credits, is to be taken in the Fall term of the fourth year (`4F`), and has not yet been completed (`False`)." 
-The three (continuation) lines afterward say `ME 498` has prerequisites `ME 302` and `ME 370` and has concurrent prerequisite (can be taken before or concurrently) `ME 430`.
+---
 
-Once you have a file with such statements, let's just say it's `courses_2017.py`, you can run it through `flowchart_generator.py` with the following statement.
-
-```console
-python flowchart_generator.py courses_2024.py
-```
-
-If a student (or her advisor) wanted to keep track of their own progress, she could mark a course as "completed" by changing the `completed` boolean of a course instance to `True`. There are (at least) two ways to do this. Within the `courses_2017.py` script, for instance, where the course, let's call it `MTH 171`, is defined using the `new_course` function, we could make the following simple statement.
-
-```python
-new_course('MTH 171',4,'4F',True)
-```
-
-However, if we wanted, we could "mark" an existing instance of a course as completed by the following statement.
-
-```python
-courses['MTH 171'].set_completed(True)
-```
-
-This is because our `new_course` function saves each `course` instance into the `dict`ionary `courses` with the lookup key being the course name (e.g. `MTH 171`).
+MIT Licensed · Developed by Dr. Rico Picone and collaborators

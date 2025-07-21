@@ -3,6 +3,20 @@ from smume.generic_plan import GenericPlan
 
 curriculum = Curriculum("ME 2024–25")
 
+# Define Categories
+
+categories_def = {
+    "C": {"name": "Core", "order": 0, "aliases": ["Core"]},
+    "F": {"name": "Foundation", "order": 1, "aliases": ["Foundation"]},
+    "Con": {"name": "Conversatio", "order": 2, "aliases": ["Conversatio"]},
+    "Ora": {"name": "Ora et Labora", "order": 3, "aliases": ["Ora et Labora"]},
+    "MS": {"name": "Math and Science", "order": 4, "aliases": ["Math and Science"]},
+    "GE": {"name": "General Engineering", "order": 5, "aliases": ["General Engineering"]},
+    "ME": {"name": "Mechanical Engineering", "order": 6, "aliases": ["Mechanical Engineering"]},
+    "O": {"name": "Other", "order": 7, "aliases": ["Other"]},
+}
+curriculum.define_categories(categories_def)
+
 # Define the Courses
 
 ## Core Courses
@@ -66,9 +80,19 @@ curriculum.course('ME El. 2', 3, categories=["ME"], critical_path=True, full_nam
 curriculum.course('ME El. 3', 3, categories=["ME"], critical_path=True, full_name="Mechanical Engineering Elective 3")
 
 # Define Category Requirements
+
+# Core Requirements
+
+## Total Credits (Have to be explicit because we defined all the W variants)
+curriculum.category_requirement("C", kind="Number of Credits", number=31)
+curriculum.category_requirement("F", kind="Number of Credits", number=11)
+curriculum.category_requirement("Con", kind="Number of Credits", number=13)
+curriculum.category_requirement("Ora", kind="Number of Credits", number=7)
+
+## Specific Core Requirements
 curriculum.category_requirement("Con", kind="Writing Intensive", number=1, note="One course must be writing intensive")
 curriculum.category_requirement("Ora", kind="Writing Intensive", number=1, note="One course must be writing intensive")
-curriculum.category_requirement("Ora", kind="Number of Courses", number=2, note="Two courses must be taken") 
+curriculum.category_requirement("Ora", kind="Number of Courses", number=2, note="Two courses must be taken")
 
 
 # Assign Terms
