@@ -47,7 +47,7 @@ class Report:
 
                 if status is not None:
                     if status and completed:
-                        status_text = " (complete)"
+                        status_text = " (Complete)"
                     elif status and not completed:
                         planned_fraction = self.plan.fraction_of_category_satisfied(key, completed_only=False)
                         completed_fraction = self.plan.fraction_of_category_satisfied(key, completed_only=True)

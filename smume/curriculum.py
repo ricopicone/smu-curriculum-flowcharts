@@ -15,6 +15,7 @@ class Curriculum:
         self.implicit_category_requirements = {}
         self.update_implicit_category_requirements()
         self.merge_category_requirements()
+        self.DTA_exemptions = {}
 
     def course(self, name, credits, categories=None, **kwargs):
         """
@@ -85,3 +86,11 @@ class Curriculum:
             merged_requirements[category].append(implicit_req)
         self.category_requirements = merged_requirements
         return self.category_requirements
+    
+    def set_DTA_exemptions(self, name: str, course_exemptions: list):
+        """
+        Defines courses that are exempt from DTA requirements.
+        Exemptions are a list of course names.
+        """
+        self.DTA_exemptions[name] = course_exemptions
+        return self

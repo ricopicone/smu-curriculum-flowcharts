@@ -7,15 +7,77 @@ class StudentPlan(GenericPlan):
     specific academic years and term overrides.
     """
 
-    def __init__(self, catalog: str, start_year: int, start_term: str = "Fall", student_name: str = None, student_id: str = None):
+    def __init__(self, catalog: str, start_year: int, start_term: str = "Fall", student_name: str = None, student_id: str = None, DTA: str = None):
         super().__init__(catalog)
         self.start_year = start_year
         self.start_term = start_term  # "Fall" or "Spring"
         self.student_course_terms = {}
         self._assign_specific_terms()
         self.student_name = student_name or "Student"
-        self.student_id = None  # Optional student ID, needed for parsing unofficial transcripts
+        self.student_id = student_id  # Optional student ID, needed for parsing unofficial transcripts
+        self._DTA = DTA
         self.notes = []  # Store student-specific notes
+    
+    @property
+    def DTA(self):
+        """
+        Returns the DTA status of the student plan.
+        If DTA is set, it returns the DTA type (e.g., "AA-DTA", "AS-DTA").
+        Otherwise, returns None.
+        """
+        return self._DTA
+    
+    @DTA.setter
+    def DTA(self, value):
+        """
+        Sets the DTA status of the student plan.
+        Accepts "AA-DTA" or "AS-DTA" to indicate the type of DTA.
+        """
+        if value not in ["AA-DTA", "AS-DTA"]:
+            raise ValueError("DTA must be 'AA-DTA' or 'AS-DTA'")
+        self._DTA = value
+        # Exempt the student via DTA
+        self.exempt_DTA()
+
+    def exempt_DTA(self):
+        """
+        Exempts the student from DTA requirements.
+        """
+        if self._DTA:
+            print(f"Exempting student from {self._DTA} requirements.")
+            # If DTA is set, mark all DTA courses as completed. Check also for W versions of exempted courses.
+            w_versions = [course_name + "W" for course_name in self.curriculum.DTA_exemptions.get(self._DTA, [])]
+            for course_name in self.curriculum.DTA_exemptions.get(self._DTA, []) + w_versions:
+                if course_name in self.curriculum.courses:
+                    # If there is a W writing intensive version, switch it to the non-W version ... I don't think this is necessary
+                    # if course_name.endswith("W"):
+                    #     term = self.student_course_terms.get(course_name, None) # Get the term of the W version
+                    #     if term is None:
+                    #         continue
+                    #     term = self.extract_year_and_semester(term) if term else None
+                    #     self.remove_course_term(course_name)  # Remove the W version
+                    #     course_name = course_name[:-1] # Remove the 'W'
+                    #     self.set_course_term(course_name, term.year, term.semester)  # Add the non-W version back to the plan
+                    # If the course is not already completed, mark it as completed
+                    # Mark the course as completed
+                    course = self.curriculum.courses[course_name]
+                    course.set_completed(True)
+                    print(f"  Marking {course_name} as completed due to DTA exemption.")
+        else:
+            print("No DTA requirements found to exempt.")
+    
+    def extract_year_and_semester(self, term_label):
+        """
+        Extracts the year and semester from a term label like '2025-F' or '2024-S'.
+        Returns a tuple (year, semester).
+        """
+        match = re.match(r"(\d{4})-(\w+)", term_label)
+        if match:
+            year = int(match.group(1))
+            semester = match.group(2)
+            return year, semester
+        else:
+            raise ValueError(f"Invalid term label format: {term_label}")
 
     def set_course_term(self, course_name: str, year, semester):
         """
@@ -25,20 +87,36 @@ class StudentPlan(GenericPlan):
         self.student_course_terms[course_name] = term_label
         self.set_term(course_name, term_label)
 
+    def remove_course_term(self, course_name: str):
+        """
+        Removes the term assignment for a course, effectively removing it from the plan.
+        """
+        self.student_course_terms.pop(course_name, None)
+        if course_name in self.curriculum.courses:
+            self.curriculum.courses[course_name].term = None
+        else:
+            print(f"Course {course_name} not found in curriculum, cannot remove term assignment.")
+
     def _normalize_term_label(self, year, semester):
         """
         Normalize year and semester into a term label like '2025-F'.
         Accepts 2- or 4-digit years and maps full season names to abbreviations.
         """
         if isinstance(year, int):
-            if year < 100:
-                year += 2000
-            year = str(year)
+            if year == 0:
+                year = "0000"  # Special case for transfer terms
+            else:
+                if year < 100:  # Handle 2-digit years
+                    year += 2000
+                year = str(year)
         elif isinstance(year, str):
-            if len(year) == 2 and year.isdigit():
-                year = "20" + year
-            elif not year.isdigit() or len(year) not in [2, 4]:
-                raise ValueError(f"Invalid year format: {year}")
+            if year == "0000":
+                year = "0000"
+            else:
+                if len(year) == 2 and year.isdigit():
+                    year = "20" + year
+                elif not year.isdigit() or len(year) not in [2, 4]:
+                    raise ValueError(f"Invalid year format: {year}")
         else:
             raise TypeError("Year must be int or string")
 
@@ -47,12 +125,13 @@ class StudentPlan(GenericPlan):
             "S": "S", "Spring": "S",
             "Su": "Su", "Summer": "Su",
             "Su1": "Su1", "Summer1": "Su1",
-            "Su2": "Su2", "Summer2": "Su2"
+            "Su2": "Su2", "Summer2": "Su2",
+            "Transfer": "Transfer"
         }
 
         sem = season_map.get(semester)
         if sem is None:
-            raise ValueError(f"Invalid semester/season: {semester}. Must be one of: F, S, Su, Su1, Su2.")
+            raise ValueError(f"Invalid semester/season: {semester}. Must be one of: F, S, Su, Su1, Su2, Transfer.")
 
         return f"{year}-{sem}"
 
@@ -114,8 +193,8 @@ class StudentPlan(GenericPlan):
         current_term = None
 
         for row in rows:
-            # Check if row is an h2 tag by looking for h2 elements in its children
-            h2_tag = row.find_previous_sibling("h2")
+            # Find the current term from the previous h2 tag
+            h2_tag = row.find_previous("h2")
             if h2_tag is not None:
                 current_term = h2_tag.get_text(strip=True)
 
@@ -127,11 +206,13 @@ class StudentPlan(GenericPlan):
                 credits = cells[4].get_text(strip=True)
                 quality_points = cells[5].get_text(strip=True)
 
-                # If credits and quality points don't parse to floats, discard the row
+                # Filter: If credits and quality points don't parse to floats, discard the row
                 if not (credits.replace('.', '', 1).isdigit() and quality_points.replace('.', '', 1).isdigit()):
                     continue
 
-                print(f"Parsing course: {course_name}, Title: {title}, Grade: {letter_grade}, Credits: {credits}, Quality Points: {quality_points}")
+                # Filter: If course name contains ["TERM", "OVERALL"], discard the row
+                if any(term.lower() in course_name.lower() for term in ["TERM", "OVERALL"]):
+                    continue
 
                 # Normalize course name (some transcripts may have variations like "COR100" instead of "COR 100" or "ME100" instead of "ME 100"). We may need to split after the letters prefix.
                 course_name = re.sub(r'(\D+)(\d+)', r'\1 \2', course_name)  # Add space between letters and numbers
@@ -140,6 +221,15 @@ class StudentPlan(GenericPlan):
                 if course_name in self.curriculum.courses:
                     course = self.curriculum.courses[course_name]
                 else:
+                    # Check if it's actually a DTA, not a course at all
+                    if "AA-DTA" in course_name:
+                        self.DTA = "AA-DTA"
+                        print(f"  Detected DTA: {self.DTA}")
+                        continue
+                    if "AS-DTA" in course_name:
+                        self.DTA = "AS-DTA"
+                        print(f"  Detected DTA: {self.DTA}")
+                        continue
                     # Add course with category Other
                     self.curriculum.course(course_name, credits=float(credits) if credits else 0.0, categories=["O"])
                     course = self.curriculum.courses[course_name]
@@ -154,15 +244,21 @@ class StudentPlan(GenericPlan):
 
                 if current_term:
                     # Attempt to parse year and semester from current_term
-                    # Expecting something like "Fall 2023" or "Spring 2024"
-                    match = re.match(r"(Fall|Spring|Summer|Su1|Su2|Su)\s*(\d{2,4})", current_term, re.IGNORECASE)
+                    # Expecting something like "2023 Fall" or "2024 Spring" or "0000 Transfer" 
+                    match = re.match(r"(\d{4})\s*(Fall|Spring|Summer|Su1|Su2|Su|Transfer)", current_term, re.IGNORECASE)
+                    print(f"  Current term match parts: {match.groups() if match else None}")
                     if match:
-                        semester_raw = match.group(1)
-                        year_raw = match.group(2)
+                        # Handle transfer terms. Change the start_year to 0000
+                        if match.group(2).lower() == "transfer":
+                            self.start_year = 0
+                            self.start_term = "Transfer"
+                        year_raw = match.group(1)
+                        semester_raw = match.group(2)
+                        print(f"  Setting term for {course_name} to semester {semester_raw} of year {year_raw}.")
                         try:
                             term_label = self._normalize_term_label(year_raw, semester_raw)
                             self.student_course_terms[course_name] = term_label
                             self.set_term(course_name, term_label)
-                        except Exception:
-                            # Ignore term parsing errors
+                        except Exception as e:
+                            print(f"  Error setting term for {course_name}: {e}")
                             pass

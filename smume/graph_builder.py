@@ -3,7 +3,7 @@
 from graphviz import Digraph
 from smume.utils import term_sort_key
 
-def build_graph(plan, output_path=None, format="png"):
+def build_graph(plan, include_transfer_term=False, output_path=None, format="png"):
     graph = Digraph(format=format, engine='dot')
     graph.attr(rankdir='LR', newrank='true', compound='true', fontname='Palatino', fontsize='12')
 
@@ -38,6 +38,9 @@ def build_graph(plan, output_path=None, format="png"):
 
     # Create a subgraph for each term
     for idx, term in enumerate(sorted_terms):
+        # Skip transfer term if not included explicitly
+        if "transfer" in term.lower() and not include_transfer_term:
+            continue
         cluster_name = f"cluster_{idx}"
         sub = Digraph(name=cluster_name)
         if type(plan).__name__ == 'StudentPlan':

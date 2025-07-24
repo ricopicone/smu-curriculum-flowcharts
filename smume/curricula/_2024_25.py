@@ -94,6 +94,9 @@ curriculum.category_requirement("Con", kind="Writing Intensive", number=1, note=
 curriculum.category_requirement("Ora", kind="Writing Intensive", number=1, note="One course must be writing intensive")
 curriculum.category_requirement("Ora", kind="Number of Courses", number=2, note="Two courses must be taken")
 
+# Define DTA Exemptions
+exemptions_DTA_AA = ["COR 100", "COR 120", "COR 210", "COR 220", "COR 240", "COR 250", "COR 310", "COR 320", "COR 330"]
+curriculum.set_DTA_exemptions("AA-DTA", exemptions_DTA_AA)
 
 # Assign Terms
 generic_plan = GenericPlan(curriculum)
