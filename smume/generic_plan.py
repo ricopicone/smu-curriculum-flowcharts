@@ -80,8 +80,8 @@ class GenericPlan:
     def set_term(self, course_name, term):
         if course_name in self.course_terms:
             self.course_terms[course_name] = term
-            if course_name in self.curriculum.courses:
-                self.curriculum.courses[course_name].term = term
+        if course_name in self.curriculum.courses:
+            self.curriculum.courses[course_name].term = term
     
     def add_course(self, course_name, term):
         """

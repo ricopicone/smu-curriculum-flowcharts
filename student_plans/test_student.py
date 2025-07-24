@@ -3,19 +3,23 @@ from smume.student_plan import StudentPlan
 import smume.report
 
 # Create a student plan for the 2024–25 catalog, starting in Fall 2024
-plan = StudentPlan("2024-25", start_year=2024, start_term="Fall")
+plan = StudentPlan("2024-25", start_year=2023, start_term="Fall")
 
 grouped = plan.courses_by_term()
 
-# Mark some courses as completed
-plan.mark_completed("MTH 171")
-plan.mark_completed("MTH 172")
-plan.mark_completed("PHY 171")
-plan.mark_completed("PHY 171L")
-plan.mark_completed("PHY 172")
-plan.mark_completed("COR 100")
-plan.mark_completed("COR 110")
-plan.mark_completed("COR 120")
+# Import courses from transcript
+plan.parse_html_transcript("test_student_transcript.html")
+
+# Mark some courses as completed (instead of parsing grades from the transcript)
+# plan.mark_completed("ME 100")
+# plan.mark_completed("MTH 171")
+# plan.mark_completed("MTH 172")
+# plan.mark_completed("PHY 171")
+# plan.mark_completed("PHY 171L")
+# plan.mark_completed("PHY 172")
+# plan.mark_completed("COR 100")
+# plan.mark_completed("COR 110")
+# plan.mark_completed("COR 120")
 
 # Move a course to a specific term
 plan.set_course_term("GE 204", 2026, "Spring") # This violates a prerequisite as we'll see
@@ -44,7 +48,8 @@ print(report.generate_text())
 plan.add_note("This is a test note for the student plan.", date="2024-10-01")
 
 # Generate an HTML report
-print(report.generate_html())
+# print(report.generate_html())
+report.generate_html()
 
 # Save the report to a file
 report.save("student_plan_report.html")

@@ -1,3 +1,4 @@
+import re
 from smume.generic_plan import GenericPlan
 
 class StudentPlan(GenericPlan):
@@ -6,13 +7,14 @@ class StudentPlan(GenericPlan):
     specific academic years and term overrides.
     """
 
-    def __init__(self, catalog: str, start_year: int, start_term: str = "Fall", student_name: str = None):
+    def __init__(self, catalog: str, start_year: int, start_term: str = "Fall", student_name: str = None, student_id: str = None):
         super().__init__(catalog)
         self.start_year = start_year
         self.start_term = start_term  # "Fall" or "Spring"
         self.student_course_terms = {}
         self._assign_specific_terms()
         self.student_name = student_name or "Student"
+        self.student_id = None  # Optional student ID, needed for parsing unofficial transcripts
         self.notes = []  # Store student-specific notes
 
     def set_course_term(self, course_name: str, year, semester):
@@ -97,3 +99,70 @@ class StudentPlan(GenericPlan):
             "timestamp": date
         }
         self.notes.append(note_structured)
+
+    def parse_html_transcript(self, file_path: str):
+        """
+        Parses an HTML transcript file and extracts course information.
+        :param file_path: Path to the HTML transcript file.
+        """
+        from bs4 import BeautifulSoup
+        with open(file_path, 'r', encoding='utf-8') as file:
+            soup = BeautifulSoup(file, 'html.parser')
+
+        rows = soup.find_all("tr")
+
+        current_term = None
+
+        for row in rows:
+            # Check if row is an h2 tag by looking for h2 elements in its children
+            h2_tag = row.find_previous_sibling("h2")
+            if h2_tag is not None:
+                current_term = h2_tag.get_text(strip=True)
+
+            cells = row.find_all("td")
+            if len(cells) >= 6:
+                course_name = cells[0].get_text(strip=True)
+                title = cells[1].get_text(strip=True)
+                letter_grade = cells[3].get_text(strip=True)
+                credits = cells[4].get_text(strip=True)
+                quality_points = cells[5].get_text(strip=True)
+
+                # If credits and quality points don't parse to floats, discard the row
+                if not (credits.replace('.', '', 1).isdigit() and quality_points.replace('.', '', 1).isdigit()):
+                    continue
+
+                print(f"Parsing course: {course_name}, Title: {title}, Grade: {letter_grade}, Credits: {credits}, Quality Points: {quality_points}")
+
+                # Normalize course name (some transcripts may have variations like "COR100" instead of "COR 100" or "ME100" instead of "ME 100"). We may need to split after the letters prefix.
+                course_name = re.sub(r'(\D+)(\d+)', r'\1 \2', course_name)  # Add space between letters and numbers
+                course_name = re.sub(r'\s+', ' ', course_name)  # Normalize multiple spaces
+                course_name = course_name.strip().upper()
+                if course_name in self.curriculum.courses:
+                    course = self.curriculum.courses[course_name]
+                else:
+                    # Add course with category Other
+                    self.curriculum.course(course_name, credits=float(credits) if credits else 0.0, categories=["O"])
+                    course = self.curriculum.courses[course_name]
+                course.letter_grade = letter_grade
+                course.grade = float(quality_points) / float(credits) if float(credits) > 0 else 0
+                course.title = title
+                course.credits = int(float(credits)) if credits else 0
+                course.quality_points = float(quality_points) if quality_points else 0.0
+                if course.letter_grade not in ["F", "", "W", "IP", "AU", "I", "NC"]:
+                    print(f"  Marking course {course_name} as completed.")
+                    course.set_completed(True)
+
+                if current_term:
+                    # Attempt to parse year and semester from current_term
+                    # Expecting something like "Fall 2023" or "Spring 2024"
+                    match = re.match(r"(Fall|Spring|Summer|Su1|Su2|Su)\s*(\d{2,4})", current_term, re.IGNORECASE)
+                    if match:
+                        semester_raw = match.group(1)
+                        year_raw = match.group(2)
+                        try:
+                            term_label = self._normalize_term_label(year_raw, semester_raw)
+                            self.student_course_terms[course_name] = term_label
+                            self.set_term(course_name, term_label)
+                        except Exception:
+                            # Ignore term parsing errors
+                            pass
