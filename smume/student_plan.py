@@ -218,6 +218,9 @@ class StudentPlan(GenericPlan):
                 course_name = re.sub(r'(\D+)(\d+)', r'\1 \2', course_name)  # Add space between letters and numbers
                 course_name = re.sub(r'\s+', ' ', course_name)  # Normalize multiple spaces
                 course_name = course_name.strip().upper()
+                # If it ends with a letter, and that letter isn't a W, strip it
+                if course_name[-1].isalpha() and course_name[-1] != 'W':
+                    course_name = course_name[:-1]
                 if course_name in self.curriculum.courses:
                     course = self.curriculum.courses[course_name]
                 else:
