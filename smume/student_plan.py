@@ -6,12 +6,14 @@ class StudentPlan(GenericPlan):
     specific academic years and term overrides.
     """
 
-    def __init__(self, catalog: str, start_year: int, start_term: str = "Fall"):
+    def __init__(self, catalog: str, start_year: int, start_term: str = "Fall", student_name: str = None):
         super().__init__(catalog)
         self.start_year = start_year
         self.start_term = start_term  # "Fall" or "Spring"
         self.student_course_terms = {}
         self._assign_specific_terms()
+        self.student_name = student_name or "Student"
+        self.notes = []  # Store student-specific notes
 
     def set_course_term(self, course_name: str, year, semester):
         """
@@ -82,3 +84,16 @@ class StudentPlan(GenericPlan):
             if season_index >= len(term_order):
                 season_index = 0
                 year += 1
+
+    def add_note(self, note: str, date: str):
+        """
+        Adds a note to the student plan.
+        Notes are specific to the student and not tied to courses or terms.
+        :param note: The note text.
+        :param date: The date of the note in 'YYYY-MM-DD' format.
+        """
+        note_structured = {
+            "text": note,
+            "timestamp": date
+        }
+        self.notes.append(note_structured)

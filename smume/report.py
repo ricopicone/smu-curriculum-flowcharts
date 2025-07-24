@@ -1,7 +1,7 @@
 class Report:
     def __init__(self, plan):
         self.plan = plan
-        self.title = "Course Report"
+        self.title = "Plan Report"
         self.styles = {}  # optional: for future styling options
         self.include_categories = None  # optional filter
 
@@ -37,7 +37,7 @@ class Report:
             for key, value in course_items:
                 title = f"{value.name}: {value.full_name}" if getattr(value, "full_name", None) else value.name
                 css_class = "course-item" + (" course-completed" if getattr(value, 'completed', False) else "")
-                html.append(f'<li class="{css_class}">{title} ({value.credits} cr)</li>')
+                html.append(f'<li class="{css_class}">{title} ({value.credits})</li>')
 
             for key, value in category_items:
                 cat_name = category_names.get(key, key)
@@ -69,8 +69,18 @@ class Report:
             return "\n".join(html)
 
         html = ['<div class="report">']
-        html.append(f'<h1>{self.title}</h1>')
-        html.append(render_hierarchy(0, self.hierarchy))
+        html.append(f'<h2>{self.title}</h2>')
+        html.append('<h3>1. Notes</h3>\n\n<ul>')
+        for note in self.plan.notes:
+            html.append(f'<li>{note["timestamp"]}: {note["text"]}</li>')
+        html.append('</ul>')
+        html.append('<h3>2. Courses by Category</h3>')
+        rendered = render_hierarchy(0, self.hierarchy)
+        if rendered.startswith('<ul>') and rendered.endswith('</ul>'):
+            rendered = rendered[len('<ul>'):-len('</ul>')]
+        html.append('<ul class="report-columns">')
+        html.append(rendered)
+        html.append('</ul>')
         html.append('</div>')
         return "\n".join(html)
     
@@ -104,7 +114,7 @@ class Report:
             for key, value in course_items:
                 title = f"{value.name}: {value.full_name}" if getattr(value, "full_name", None) else value.name
                 completed_mark = " ✓" if getattr(value, 'completed', False) else ""
-                lines.append(f"{indent}- {completed_mark} {title} ({value.credits} cr)")
+                lines.append(f"{indent}- {completed_mark} {title} ({value.credits})")
 
             for key, value in category_items:
                 cat_name = category_names.get(key, key)
@@ -154,8 +164,26 @@ class Report:
                 current_level = current_level[cat]
             current_level[course.name] = course
         return hierarchy
+    
     def save(self, filepath):
         """Save the report to the given filepath based on file extension."""
         content = self.generate_html() if filepath.endswith(".html") else self.generate_text()
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)
+
+    def css_styles(self):
+        """Return CSS styles for the report, including print formatting."""
+        return """
+        <style>
+            body { font-family: Palatino, serif; }
+            .report { margin: 20px; }
+            .category-group { font-weight: bold; }
+            .course-item { margin-left: 20px; font-weight: normal; }
+            .course-completed::before { content: "✓ "; }
+
+            ul.report-columns {
+                column-count: 2;
+                column-gap: 40px;
+            }
+        </style>
+        """

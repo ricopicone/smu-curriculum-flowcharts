@@ -34,6 +34,8 @@ class GenericPlan:
         else:
             self.curriculum = catalog
             self.catalog = str(catalog)
+        self.name = self.curriculum.name
+        self.notes_generic = []
 
     @property
     def courses(self):
@@ -380,3 +382,10 @@ class GenericPlan:
             return total_completed / total_required
         else:
             return total_planned / total_required
+        
+    def add_generic_note(self, note):
+        """
+        Adds a note to the generic plan.
+        Notes are not tied to specific courses or terms.
+        """
+        self.notes_generic.append(note)

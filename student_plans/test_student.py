@@ -1,3 +1,4 @@
+
 from smume.student_plan import StudentPlan
 import smume.report
 
@@ -39,8 +40,21 @@ build_graph(plan, output_path="test_student", format="svg")
 report = smume.report.Report(plan)
 print(report.generate_text())
 
+# Add a note to the student plan
+plan.add_note("This is a test note for the student plan.", date="2024-10-01")
+
 # Generate an HTML report
 print(report.generate_html())
 
 # Save the report to a file
 report.save("student_plan_report.html")
+
+# Generate a combined HTML document with the report and flowchart
+from smume.me_plan_document import MEPlanDocument
+document = MEPlanDocument(plan)
+combined_path = document.save_combined_document()
+print(f"Combined document saved to: {combined_path}")
+
+# Export the combined document to PDF
+pdf_path = document.export_combined_document_pdf()
+print(f"PDF document saved to: {pdf_path}")
