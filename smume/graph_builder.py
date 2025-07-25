@@ -186,7 +186,12 @@ def build_graph(plan, include_transfer_term=False, output_path=None, format="png
 
     # Add an invisible edge to pull the legend toward bottom right
     if plan.courses:
-        last_course = list(plan.courses)[-1]
+        last_term = plan.last_term()
+        # Get the last course in the last term
+        if last_term in courses_by_term:
+            last_course = courses_by_term[last_term][-1]
+        else:
+            last_course = plan.courses[-1]
         graph.edge(last_course.name, 'pr_edge', style='invis')
     graph.subgraph(legend)
 

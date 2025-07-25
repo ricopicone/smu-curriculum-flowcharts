@@ -8,10 +8,10 @@ class StudentPlan(GenericPlan):
     specific academic years and term overrides.
     """
 
-    def __init__(self, catalog: str, start_year: int, start_term: str = "Fall", student_name: str = None, student_id: str = None, DTA: str = None):
+    def __init__(self, catalog: str, start_year: int, start_semester: str = "Fall", student_name: str = None, student_id: str = None, DTA: str = None):
         super().__init__(catalog)
         self.start_year = start_year
-        self.start_term = start_term  # "Fall" or "Spring"
+        self.start_semester = start_semester  # "Fall" or "Spring"
         self.term_now = self.get_term_now()
         self._assign_specific_terms()
         self.student_name = student_name or "Student"
@@ -63,6 +63,7 @@ class StudentPlan(GenericPlan):
                     # Mark the course as completed
                     course = self.curriculum.courses[course_name]
                     course.set_completed(True)
+                    self.set_term(course_name, "0000-Transfer")
                     print(f"  Marking {course_name} as completed due to DTA exemption.")
         else:
             print("No DTA requirements found to exempt.")
@@ -140,7 +141,32 @@ class StudentPlan(GenericPlan):
             if next_semester in semester_order:
                 return f"{year}-{next_semester}"
             
-    def assert_coprerequisites(self):
+    def get_term_before(self, term_label: str, skip_summer=True, skip_half_terms=True):
+        """
+        Gets the term label for the term before the given term.
+        """
+        year, semester = self.extract_year_and_semester(term_label)
+        all_semesters = ["S", "Su", "Su1", "Su2", "F"]
+        if skip_summer:
+            semester_order = ["S", "F"]
+        elif skip_half_terms:
+            semester_order = ["S", "Su", "F"]
+        else:
+            semester_order = all_semesters
+        current_index = all_semesters.index(semester)
+        for i in range(current_index - 1, -1, -1):
+            if i >= 0:
+                prev_semester = all_semesters[i]
+                if prev_semester in semester_order:
+                    return f"{year}-{prev_semester}"
+        # If we reach the beginning of the semester list, decrement the year and start from the last valid semester
+        year -= 1
+        for i in range(len(all_semesters) - 1, -1, -1):
+            prev_semester = all_semesters[i]
+            if prev_semester in semester_order:
+                return f"{year}-{prev_semester}"
+            
+    def enforce_coprerequisites(self):
         """
         Moves courses with unmet coprerequisites forward to the term of its coprerequisite with the latest term.
         Iteratively moves courses forward until all coprerequisites are satisfied.
@@ -159,29 +185,31 @@ class StudentPlan(GenericPlan):
                         latest_term = None
                         for copreq in unmet_coprereqs:
                             copreq_course = self.curriculum.courses.get(copreq)
-                            if copreq_course and (latest_term is None or self.is_term_older(copreq_course.term, latest_term, equal=True)):
+                            if copreq_course and (latest_term is None or self.is_term_earlier(copreq_course.term, latest_term, equal=True)):
                                 latest_term = copreq_course.term
                         if latest_term:
                             print(f"  Moving {course_name} to the term of its latest coprerequisite: {latest_term}.")
                             year, semester = self.extract_year_and_semester(latest_term)
                             self.set_course_term(course_name, year, semester)
     
-    def get_unmet_coprerequisites_in_term(self, course_name):
+    def get_unmet_coprerequisites_in_term(self, course_name, term=None):
         """
         Returns a list of coprerequisites for a given course that will not be met by the term in which the course is planned.
         """
         course = self.curriculum.courses.get(course_name)
         if not course:
             return []
+        course_term = term if term is not None else course.term  # Use the provided term or the course's term
         unmet_coprereqs = []
         for copreq in course.coprereqs:
             copreq_course = self.curriculum.courses.get(copreq)
             copreq_term = copreq_course.term
-            if copreq_course and not self.is_term_older(term=copreq_term, than=course.term, equal=True):
+            if copreq_course and not self.is_term_earlier(term=copreq_term, than=course_term, equal=True):
                 unmet_coprereqs.append(copreq)
+        print(f"  Unmet coprerequisites for {course_name} in term {course_term}: {unmet_coprereqs}")
         return unmet_coprereqs
     
-    def assert_corequisites(self):
+    def enforce_corequisites(self):
         """
         Moves courses with unmet corequisites forward to the term of its corequisite with the latest term.
         Iteratively moves courses forward until all corequisites are satisfied.
@@ -200,29 +228,31 @@ class StudentPlan(GenericPlan):
                         latest_term = None
                         for coreq in unmet_coreqs:
                             coreq_course = self.curriculum.courses.get(coreq)
-                            if coreq_course and (latest_term is None or self.is_term_older(coreq_course.term, latest_term, equal=True)):
+                            if coreq_course and (latest_term is None or self.is_term_earlier(coreq_course.term, latest_term, equal=True)):
                                 latest_term = coreq_course.term
                         if latest_term:
                             print(f"  Moving {course_name} to the term of its latest corequisite: {latest_term}.")
                             year, semester = self.extract_year_and_semester(latest_term)
                             self.set_course_term(course_name, year, semester)
 
-    def get_unmet_corequisites_in_term(self, course_name):
+    def get_unmet_corequisites_in_term(self, course_name, term=None):
         """
         Returns a list of corequisites for a given course that will not be met by the term in which the course is planned.
         """
         course = self.curriculum.courses.get(course_name)
         if not course:
             return []
+        course_term = term if term is not None else course.term  # Use the provided term or the course's term
         unmet_coreqs = []
         for coreq in course.coreqs:
             coreq_course = self.curriculum.courses.get(coreq)
             coreq_term = coreq_course.term
-            if coreq_course and not self.is_term_older(term=coreq_term, than=course.term, equal=True):
+            if coreq_course and not self.is_term_earlier(term=coreq_term, than=course_term, equal=True):
                 unmet_coreqs.append(coreq)
+        print(f"  Unmet corequisites for {course_name} in term {course_term}: {unmet_coreqs}")
         return unmet_coreqs
                     
-    def assert_prerequisites(self):
+    def enforce_prerequisites(self):
         """
         Moves courses with unmet prerequisites to terms in which they can be taken.
         Iteratively moves courses forward until all prerequisites are satisfied.
@@ -258,22 +288,29 @@ class StudentPlan(GenericPlan):
         else:
             raise ValueError(f"Invalid term label format: {term_label}")
         
-    def get_unmet_prerequisites_in_term(self, course_name):
+    def get_unmet_prerequisites_in_term(self, course_name, term=None):
         """
         Returns a list of prerequisites for a given course that will not be met by the term in which the course is planned.
         """
         course = self.curriculum.courses.get(course_name)
         if not course:
             return []
+        course_term = term if term is not None else course.term  # Use the provided term or the course's term
         unmet_prereqs = []
         for prereq in course.prereqs:
+            print(f"Checking prerequisite {prereq} for course {course_name}.")
             prereq_course = self.curriculum.courses.get(prereq)
             prereq_term = prereq_course.term
-            if prereq_course and not self.is_term_older(term=prereq_term, than=course.term, equal=False):
+            print(f"  Is {prereq_term} older than {course_term}?")
+            if prereq_course and not self.is_term_earlier(term=prereq_term, than=course_term, equal=False):
+                print(f"  {prereq} is not met for {course_name} in term {course_term}.")
                 unmet_prereqs.append(prereq)
+            else:
+                print(f"  {prereq} is met for {course_name} in term {course_term}.")
+        print(f"  Unmet prerequisites for {course_name} in term {course_term}: {unmet_prereqs}")
         return unmet_prereqs
     
-    def is_term_older(self, term, than, equal=False):
+    def is_term_earlier(self, term, than, equal=False):
         """
         Checks if the given term is older than the specified term.
         If equal is True, it also considers terms that are the same as older.
@@ -291,13 +328,113 @@ class StudentPlan(GenericPlan):
                 return True
         return False
 
-    def set_course_term(self, course_name: str, year, semester):
+    def compress_schedule(self, only_constrained=True):
+        """
+        Compresses the schedule by moving courses to the earliest possible term.
+        This is useful for optimizing the course load and ensuring prerequisites are met.
+        """
+        print("Compressing schedule by moving courses to the earliest possible term.")
+        for course_name, course in self.curriculum.courses.items():
+            if not course.completed:
+                current_term = course.term
+                if current_term:
+                    # Move everything (or everything constrained) to next semester (this will violate pre, co, and coprerequisites)
+                    next_term = self.get_term_after(self.get_term_now())
+                    if self.is_term_earlier(next_term, than=current_term, equal=False):
+                        if only_constrained:
+                            if (course.prereqs or course.coreqs or course.coprereqs):
+                                self.set_course_term(course_name, *self.extract_year_and_semester(next_term))
+                        else:
+                            self.set_course_term(course_name, *self.extract_year_and_semester(next_term))
+        # Now we need to enforce prerequisites, coprerequisites, and corequisites
+        self.enforce_prerequisites()
+        self.enforce_coprerequisites()
+        self.enforce_corequisites()
+
+    def set_course_term(self, course_name: str, year: int = None, semester: str = None, term: str = None):
         """
         Assigns a specific normalized term label like '2025-F' to the course.
+        Term has to be provided as a string like '2025-F' to term argument or
+        as separate year and semester arguments.
         """
+        if term:
+            year, semester = self.extract_year_and_semester(term)
         term_label = self._normalize_term_label(year, semester)
         self.courses_by_term()[course_name] = term_label
         self.set_term(course_name, term_label)
+
+    def get_course_term(self, course_name: str):
+        """
+        Retrieves the term assignment for a course.
+        """
+        return self.courses[course_name].term if course_name in self.courses else None
+    
+    def bump_course_term(self, course_name: str, skip_summer=True, skip_half_terms=True, reverse=False):
+        """
+        Moves the course to the next term after its current term.
+        If reverse is True, it moves to the previous term instead.
+        If skip_summer is True, it skips summer terms.
+        """
+        if course_name not in self.courses:
+            raise KeyError(f"Course {course_name} not found in curriculum.")
+        
+        current_term = self.get_course_term(course_name)
+        if current_term is None:
+            raise ValueError(f"Course {course_name} does not have a term assigned.")
+        
+        if reverse: # Move to the previous term
+            new_term = self.get_term_before(current_term, skip_summer=skip_summer, skip_half_terms=skip_half_terms)
+        else: # Move to the next term
+            new_term = self.get_term_after(current_term, skip_summer=skip_summer, skip_half_terms=skip_half_terms)
+        self.set_course_term(course_name, term=new_term)
+
+    def bump_to_typical_term(self, course_name: str):
+        """
+        Moves the course to the typical term for its type.
+        For example, if the course is typically taken in Fall, it will be moved to the next Fall term.
+        """
+        if course_name not in self.curriculum.courses:
+            raise KeyError(f"Course {course_name} not found in curriculum.")
+        
+        course = self.curriculum.courses[course_name]
+
+        if course.term is None:
+            raise ValueError(f"Course {course_name} does not have a term assigned.")
+        
+        if course.completed:
+            return course.term  # No need to bump completed courses
+        
+        # Determine the typical term based on the course's type
+        typical_semester = course.typical_semester
+        if typical_semester is None:
+            # If no typical semester is defined, we can't bump the course
+            print(f"No typical semester defined for {course_name}, cannot bump.")
+            return course.term
+        else:
+            current_semester = self.extract_year_and_semester(course.term)[1]
+            if typical_semester != current_semester:
+                # Move to the next occurrence of the typical semester
+                # Iterate through the terms until we find the next occurrence of the typical semester
+                while True:
+                    next_term = self.get_term_after(course.term, skip_summer=True, skip_half_terms=True)
+                    next_year, next_semester = self.extract_year_and_semester(next_term)
+                    course.term = next_term
+                    if next_semester == typical_semester:
+                        break
+        print(f"Bumping {course_name} from {current_semester} to its typical term: {course.term}.")
+        return course.term
+    
+    def bump_all_courses_to_typical_terms(self):
+        """
+        Moves all courses in the plan to their typical terms.
+        This is useful for ensuring that courses are scheduled in the semesters they are typically offered.
+        """
+        print("Bumping all courses to their typical terms.")
+        for course_name in self.curriculum.courses:
+            try:
+                self.bump_to_typical_term(course_name)
+            except ValueError as e:
+                print(f"Could not bump {course_name}: {e}")
 
     def remove_course_term(self, course_name: str):
         """
@@ -361,7 +498,7 @@ class StudentPlan(GenericPlan):
         Only considers S and F terms in a yearly cycle.
         """
         term_order = ["S", "F"]
-        start_index = term_order.index(self._normalize_term_label(self.start_year, self.start_term).split("-")[1])
+        start_index = term_order.index(self._normalize_term_label(self.start_year, self.start_semester).split("-")[1])
         generic_terms = sorted(t for t in self.courses_by_term().keys() if t is not None)
 
         year = self.start_year
@@ -464,9 +601,9 @@ class StudentPlan(GenericPlan):
                     print(f"  Current term match parts: {match.groups() if match else None}")
                     if match:
                         # Handle transfer terms. Change the start_year to 0000
-                        if match.group(2).lower() == "transfer":
-                            self.start_year = 0
-                            self.start_term = "Transfer"
+                        # if match.group(2).lower() == "transfer":
+                            # self.start_year = 0
+                            # self.start_semester = "Transfer"
                         year_raw = match.group(1)
                         semester_raw = match.group(2)
                         print(f"  Setting term for {course_name} to semester {semester_raw} of year {year_raw}.")
@@ -478,6 +615,19 @@ class StudentPlan(GenericPlan):
                             print(f"  Error setting term for {course_name}: {e}")
                             pass
         self.move_unfinished_courses_forward()  # Move unfinished courses to the next term after the current term
-        self.assert_prerequisites()  # Ensure all courses have their prerequisites satisfied
-        self.assert_coprerequisites()  # Ensure all courses have their coprerequisites satisfied
-        self.assert_corequisites()  # Ensure all courses have their corequisites satisfied
+        self.enforce_prerequisites()  # Ensure all courses have their prerequisites satisfied
+        self.enforce_coprerequisites()  # Ensure all courses have their coprerequisites satisfied
+        self.enforce_corequisites()  # Ensure all courses have their corequisites satisfied
+    
+    def last_term(self):
+        """
+        Returns the last term in the plan.
+        """
+        last_term = self._normalize_term_label(self.start_year, self.start_semester)
+        for course_name, course in self.curriculum.courses.items():
+            if course.term is not None:
+                print(f"IS {course_name} in the last term? Is {course.term} later than {last_term}? ", end="")
+                if not self.is_term_earlier(course.term, last_term, equal=True):
+                    last_term = course.term
+                    print(f" ... YES!")
+        return last_term

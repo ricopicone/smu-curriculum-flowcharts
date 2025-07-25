@@ -3,7 +3,7 @@
 class Course:
     """Defines a course with relationships and metadata."""
 
-    def __init__(self, name, credits, term=None, completed=False, critical_path=True, categories=None, full_name=None, note=None, ms_credits=None, writing_intensive=False):
+    def __init__(self, name, credits, term=None, completed=False, critical_path=True, categories=None, full_name=None, note=None, ms_credits=None, writing_intensive=False, typical_semester=None):
         self.name = name
         self.credits = credits
         self.term = term
@@ -16,6 +16,7 @@ class Course:
         self.categories = categories
         self.full_name = full_name or name
         self.note = note
+        self.typical_semester = typical_semester
         if self.note is None:
             if self.full_name:
                 self.note = f"{self.full_name}"

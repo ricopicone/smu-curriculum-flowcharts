@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "smume"
-version = "0.1.4"
+version = "0.1.5"
 description = "A package for Saint Martin's University Mechanical Engineering students to create a custom flowchart for their academic plan."
 authors = ["Rico Picone <rpicone@stmartin.edu>"]
 readme = "README.md"
