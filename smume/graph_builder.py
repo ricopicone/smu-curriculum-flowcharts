@@ -47,6 +47,14 @@ def build_graph(plan, include_transfer_term=False, output_path=None, format="png
             term_label = f""
         else:
             term_label = f"Term: "
+        # Add a semester icon emoji: * Fall 🍂, Spring 🌱, Summer ☀️
+        print(f"Processing term: {term} with label: {term_label}")
+        if "-F" in term:
+            term_label += " 🍂 "
+        elif "-Su" in term:
+            term_label += " ☀️ "
+        elif "-S" in term:
+            term_label += " 🌱 "
         sub.attr(rank='same', style='filled', color='#cecdc9',
                  label=f"<<B>{term_label}{term}</B><BR/><FONT POINT-SIZE=\"10\" COLOR=\"#6e6d6a\">{sum(c.credits for c in courses_by_term[term])} cr</FONT>>")
 

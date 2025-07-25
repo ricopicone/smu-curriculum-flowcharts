@@ -11,73 +11,73 @@
 <g id="clust1" class="cluster">
 <title>cluster_1</title>
 <polygon fill="#cecdc9" stroke="#cecdc9" points="102.47,-188 102.47,-432 202.72,-432 202.72,-188 102.47,-188"/>
-<text text-anchor="start" x="135.34" y="-417.6" font-family="Palatino" font-weight="bold" font-size="12.00">2023&#45;F</text>
+<text text-anchor="start" x="126.34" y="-417.6" font-family="Palatino" font-weight="bold" font-size="12.00"> 🍂 2023&#45;F</text>
 <text text-anchor="start" x="142.84" y="-407.5" font-family="Palatino" font-size="10.00" fill="#6e6d6a">11 cr</text>
 </g>
 <g id="clust2" class="cluster">
 <title>cluster_2</title>
 <polygon fill="#cecdc9" stroke="#cecdc9" points="210.72,-134 210.72,-432 319.22,-432 319.22,-134 210.72,-134"/>
-<text text-anchor="start" x="247.34" y="-417.6" font-family="Palatino" font-weight="bold" font-size="12.00">2024&#45;S</text>
+<text text-anchor="start" x="238.34" y="-417.6" font-family="Palatino" font-weight="bold" font-size="12.00"> 🌱 2024&#45;S</text>
 <text text-anchor="start" x="254.47" y="-407.5" font-family="Palatino" font-size="10.00" fill="#6e6d6a">15 cr</text>
 </g>
 <g id="clust3" class="cluster">
 <title>cluster_3</title>
 <polygon fill="#cecdc9" stroke="#cecdc9" points="327.22,-188 327.22,-270 427.47,-270 427.47,-188 327.22,-188"/>
-<text text-anchor="start" x="355.97" y="-255.6" font-family="Palatino" font-weight="bold" font-size="12.00">2024&#45;Su</text>
+<text text-anchor="start" x="346.97" y="-255.6" font-family="Palatino" font-weight="bold" font-size="12.00"> ☀️ 2024&#45;Su</text>
 <text text-anchor="start" x="369.47" y="-245.5" font-family="Palatino" font-size="10.00" fill="#6e6d6a">3 cr</text>
 </g>
 <g id="clust4" class="cluster">
 <title>cluster_4</title>
 <polygon fill="#cecdc9" stroke="#cecdc9" points="435.47,-188 435.47,-486 535.72,-486 535.72,-188 435.47,-188"/>
-<text text-anchor="start" x="468.34" y="-471.6" font-family="Palatino" font-weight="bold" font-size="12.00">2024&#45;F</text>
+<text text-anchor="start" x="459.34" y="-471.6" font-family="Palatino" font-weight="bold" font-size="12.00"> 🍂 2024&#45;F</text>
 <text text-anchor="start" x="475.09" y="-461.5" font-family="Palatino" font-size="10.00" fill="#6e6d6a">15 cr</text>
 </g>
 <g id="clust5" class="cluster">
 <title>cluster_5</title>
 <polygon fill="#cecdc9" stroke="#cecdc9" points="543.72,-134 543.72,-342 646.97,-342 646.97,-134 543.72,-134"/>
-<text text-anchor="start" x="577.72" y="-327.6" font-family="Palatino" font-weight="bold" font-size="12.00">2025&#45;S</text>
+<text text-anchor="start" x="568.72" y="-327.6" font-family="Palatino" font-weight="bold" font-size="12.00"> 🌱 2025&#45;S</text>
 <text text-anchor="start" x="587.47" y="-317.5" font-family="Palatino" font-size="10.00" fill="#6e6d6a">8 cr</text>
 </g>
 <g id="clust6" class="cluster">
 <title>cluster_6</title>
 <polygon fill="#cecdc9" stroke="#cecdc9" points="667.97,-197 667.97,-279 758.47,-279 758.47,-197 667.97,-197"/>
-<text text-anchor="start" x="691.84" y="-264.6" font-family="Palatino" font-weight="bold" font-size="12.00">2025&#45;Su</text>
+<text text-anchor="start" x="682.84" y="-264.6" font-family="Palatino" font-weight="bold" font-size="12.00"> ☀️ 2025&#45;Su</text>
 <text text-anchor="start" x="705.34" y="-254.5" font-family="Palatino" font-size="10.00" fill="#6e6d6a">4 cr</text>
 </g>
 <g id="clust7" class="cluster">
 <title>cluster_7</title>
 <polygon fill="#cecdc9" stroke="#cecdc9" points="779.47,-190 779.47,-452 869.97,-452 869.97,-190 779.47,-190"/>
-<text text-anchor="start" x="807.47" y="-437.6" font-family="Palatino" font-weight="bold" font-size="12.00">2025&#45;F</text>
+<text text-anchor="start" x="798.47" y="-437.6" font-family="Palatino" font-weight="bold" font-size="12.00"> 🍂 2025&#45;F</text>
 <text text-anchor="start" x="814.97" y="-427.5" font-family="Palatino" font-size="10.00" fill="#6e6d6a">11 cr</text>
 </g>
 <g id="clust8" class="cluster">
 <title>cluster_8</title>
 <polygon fill="#cecdc9" stroke="#cecdc9" points="890.97,-190 890.97,-596 984.47,-596 984.47,-190 890.97,-190"/>
-<text text-anchor="start" x="920.09" y="-581.6" font-family="Palatino" font-weight="bold" font-size="12.00">2026&#45;S</text>
+<text text-anchor="start" x="911.09" y="-581.6" font-family="Palatino" font-weight="bold" font-size="12.00"> 🌱 2026&#45;S</text>
 <text text-anchor="start" x="927.22" y="-571.5" font-family="Palatino" font-size="10.00" fill="#6e6d6a">18 cr</text>
 </g>
 <g id="clust9" class="cluster">
 <title>cluster_9</title>
 <polygon fill="#cecdc9" stroke="#cecdc9" points="1005.47,-8 1005.47,-324 1091.47,-324 1091.47,-8 1005.47,-8"/>
-<text text-anchor="start" x="1031.22" y="-309.6" font-family="Palatino" font-weight="bold" font-size="12.00">2026&#45;F</text>
+<text text-anchor="start" x="1022.22" y="-309.6" font-family="Palatino" font-weight="bold" font-size="12.00"> 🍂 2026&#45;F</text>
 <text text-anchor="start" x="1037.97" y="-299.5" font-family="Palatino" font-size="10.00" fill="#6e6d6a">14 cr</text>
 </g>
 <g id="clust10" class="cluster">
 <title>cluster_10</title>
 <polygon fill="#cecdc9" stroke="#cecdc9" points="1112.47,-309 1112.47,-679 1198.47,-679 1198.47,-309 1112.47,-309"/>
-<text text-anchor="start" x="1137.84" y="-664.6" font-family="Palatino" font-weight="bold" font-size="12.00">2027&#45;S</text>
+<text text-anchor="start" x="1128.84" y="-664.6" font-family="Palatino" font-weight="bold" font-size="12.00"> 🌱 2027&#45;S</text>
 <text text-anchor="start" x="1144.97" y="-654.5" font-family="Palatino" font-size="10.00" fill="#6e6d6a">17 cr</text>
 </g>
 <g id="clust11" class="cluster">
 <title>cluster_11</title>
 <polygon fill="#cecdc9" stroke="#cecdc9" points="1219.47,-259 1219.47,-467 1308.47,-467 1308.47,-259 1219.47,-259"/>
-<text text-anchor="start" x="1246.72" y="-452.6" font-family="Palatino" font-weight="bold" font-size="12.00">2027&#45;F</text>
+<text text-anchor="start" x="1237.72" y="-452.6" font-family="Palatino" font-weight="bold" font-size="12.00"> 🍂 2027&#45;F</text>
 <text text-anchor="start" x="1256.09" y="-442.5" font-family="Palatino" font-size="10.00" fill="#6e6d6a">8 cr</text>
 </g>
 <g id="clust12" class="cluster">
 <title>cluster_12</title>
 <polygon fill="#cecdc9" stroke="#cecdc9" points="1329.47,-333 1329.47,-415 1412.47,-415 1412.47,-333 1329.47,-333"/>
-<text text-anchor="start" x="1353.34" y="-400.6" font-family="Palatino" font-weight="bold" font-size="12.00">2028&#45;S</text>
+<text text-anchor="start" x="1344.34" y="-400.6" font-family="Palatino" font-weight="bold" font-size="12.00"> 🌱 2028&#45;S</text>
 <text text-anchor="start" x="1363.09" y="-390.5" font-family="Palatino" font-size="10.00" fill="#6e6d6a">3 cr</text>
 </g>
 <g id="clust13" class="cluster">
