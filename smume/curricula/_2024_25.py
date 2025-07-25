@@ -1,7 +1,8 @@
 from smume.curriculum import Curriculum
 from smume.generic_plan import GenericPlan
+import re
 
-curriculum = Curriculum("ME 2024–25")
+curriculum = Curriculum("ME 2024-25")
 
 # Define Categories
 
@@ -75,9 +76,15 @@ curriculum.course('ME 430', 3, categories=["ME"], typical_semester="F", full_nam
 curriculum.course('ME 430L', 2, categories=["ME", "MS"], ms_credits=1, typical_semester="F", full_name="Heat Transfer Laboratory").add_coprereq('ME 430')
 curriculum.course('ME 498', 3, categories=["ME"], typical_semester="F", full_name="Senior Design I").add_prereq('ME 302').add_prereq('ME 370').add_coprereq('ME 430')
 curriculum.course('ME 499', 3, categories=["ME"], typical_semester="S", full_name="Senior Design II").add_prereq('ME 498')
-curriculum.course('ME El. 1', 3, categories=["ME"], full_name="Mechanical Engineering Elective 1")
-curriculum.course('ME El. 2', 3, categories=["ME"], full_name="Mechanical Engineering Elective 2")
-curriculum.course('ME El. 3', 3, categories=["ME"], full_name="Mechanical Engineering Elective 3")
+ME_Electives = ["ME 306", "ME 313", "ME 314", "ME 315", "ME 317", "ME 318", "ME 341", "ME 383", "ME 384", "ME 385", "ME 404", "ME 405", "ME 410", "ME 419", "ME 422", "ME 423", "ME 426", "ME 427", "ME 433", "ME 435", "ME 437", "ME 440", "ME 442", "ME 451", "ME 461", "ME 462", "ME 464", "ME 465", "ME 466", "ME 467", "ME 468", "ME 469", "ME 472", "ME 477", "ME 481", "ME 482", "ME 486", "ME 487", "ME 488", "ME 490", "ME 495", "ME 497", "PHY 303", "MME 501", "MME 502", "MME 503"]
+for elective in ME_Electives:
+    # Get the first digit of the elective code
+    first_digit = re.search(r'\d', elective)
+    if elective.startswith("ME ") and first_digit == "4":
+        ME_Electives.append("M" + elective)  # Add 'M' prefixed version of each elective (MME ... 
+curriculum.course('ME El. 1', 3, categories=["ME"], full_name="Mechanical Engineering Elective 1", generic_for=ME_Electives)
+curriculum.course('ME El. 2', 3, categories=["ME"], full_name="Mechanical Engineering Elective 2", generic_for=ME_Electives)
+curriculum.course('ME El. 3', 3, categories=["ME"], full_name="Mechanical Engineering Elective 3", generic_for=ME_Electives)
 
 # Define Category Requirements
 

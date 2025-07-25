@@ -3,7 +3,7 @@
 class Course:
     """Defines a course with relationships and metadata."""
 
-    def __init__(self, name, credits, term=None, completed=False, critical_path=True, categories=None, full_name=None, note=None, ms_credits=None, writing_intensive=False, typical_semester=None):
+    def __init__(self, name, credits, term=None, completed=False, critical_path=True, categories=None, full_name=None, note=None, ms_credits=None, writing_intensive=False, typical_semester=None, generic_for=None):
         self.name = name
         self.credits = credits
         self.term = term
@@ -27,6 +27,7 @@ class Course:
         else:
             self.ms_credits = 0
         self.writing_intensive = writing_intensive
+        self.generic_for = generic_for
 
     def add_prereq(self, prereq_name):
         self.prereqs.append(prereq_name)

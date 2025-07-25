@@ -618,6 +618,23 @@ class StudentPlan(GenericPlan):
         self.enforce_prerequisites()  # Ensure all courses have their prerequisites satisfied
         self.enforce_coprerequisites()  # Ensure all courses have their coprerequisites satisfied
         self.enforce_corequisites()  # Ensure all courses have their corequisites satisfied
+        self.replace_generic_courses()  # Replace generic courses with specific courses if they are planned or completed
+    
+    def replace_generic_courses(self):
+        """
+        Replaces each course in the plan that has a nonempty generic_for attribute with a specific course if it is planned (or completed).
+        """
+        for course_name, course in self.curriculum.courses.items():
+            if course.generic_for:
+                # This is a generic course that can be replaced with a specific course
+                # See if any of the courses in generic_for are planned
+                planned_courses = [course.name for course in self.courses]
+                for for_course in course.generic_for:
+                    if for_course in planned_courses:
+                        # Replace the generic with the specific course
+                        # Remove the generic course from the plan
+                        self.remove_course_term(course.name)
+                        break
     
     def last_term(self):
         """

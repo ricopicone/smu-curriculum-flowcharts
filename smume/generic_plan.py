@@ -1,4 +1,5 @@
 import re
+from smume.course_model import Course
 from smume.utils import term_sort_key, normalize_categories
 
 def catalog_to_module_name(catalog):
