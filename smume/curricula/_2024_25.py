@@ -60,7 +60,7 @@ curriculum.course('GE 207', 1, categories=["GE"], typical_semester="S", full_nam
 ## Mechanical Engineering (ME)
 curriculum.course('ME 100', 1, categories=["ME"], typical_semester="F", full_name="Mechanical Engineering Seminar")
 curriculum.course('ME 201', 2, categories=["ME"], typical_semester="S", full_name="Technical Communication").add_prereq('COR 120')
-curriculum.course('ME 300', 3, categories=["ME"], typical_semester="F", full_name="Manufacturing").add_prereq('GE 206')
+curriculum.course('ME 300', 3, categories=["ME"], typical_semester="F", full_name="Manufacturing")
 curriculum.course('ME 300L', 1, categories=["ME"], typical_semester="F", full_name="Manufacturing Laboratory").add_coprereq('ME 300')
 curriculum.course('ME 303', 3, categories=["ME", "MS"], typical_semester="F", full_name="Materials Science").add_prereq('GE 206').add_prereq('CHM 145')
 curriculum.course('ME 316', 2, categories=["ME", "MS"], ms_credits=1, typical_semester="F", full_name="Mechatronics and Instrumentation Laboratory").add_coprereq('ME 345')
